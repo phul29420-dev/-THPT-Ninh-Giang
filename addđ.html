@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THPT Ninh Giang</title>
+
+  <!-- Font nghệ thuật -->
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ======= PHẦN CSS ======= */
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100vh;
+      background: radial-gradient(circle at center, #0b0033, #020014);
+      color: white;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Canvas galaxy nền */
+    #galaxy {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+
+    /* Dòng chữ trung tâm */
+    .welcome-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      animation: fadeIn 2s ease-in-out;
+      transition: all 0.4s ease;
+    }
+
+    .welcome-text h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: 3.8rem;
+      line-height: 1.4;
+      color: #ffffff;
+      text-shadow:
+        0 0 10px #7b9eff,
+        0 0 25px #6be3ff,
+        0 0 40px #b86bff,
+        0 0 60px #ffffff;
+      animation: glow 3s infinite alternate;
+      cursor: pointer;
+    }
+
+    .welcome-text:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      filter: brightness(1.3);
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 10px #6be3ff, 0 0 20px #8a75ff, 0 0 30px #b86bff;
+      }
+      to {
+        text-shadow: 0 0 25px #8affff, 0 0 45px #b86bff, 0 0 70px #ffffff;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -60%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    /* Nút phát nhạc */
+    #playMusic {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ff0033, #ffcc00);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 24px;
+      box-shadow: 0 0 20px #ff0066;
+      transition: transform 0.3s;
+      animation: spin 5s linear infinite;
+    }
+
+    #playMusic:hover {
+      transform: scale(1.2);
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    audio {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Nền galaxy -->
+  <canvas id="galaxy"></canvas>
+
+  <!-- Dòng chữ trung tâm -->
+  <div class="welcome-text">
+    <h1 id="title"><a href="#" style="text-decoration: none; color: inherit;">Chào mừng đến với<br>THPT Ninh Giang</a></h1>
+  </div>
+
+  <!-- Nhạc nền -->
+  <audio id="bg-music" loop>
+    <!-- Đặt file mp3 cùng thư mục với file này -->
+    <source src="Từng Ngày Yêu Em.mp3" type="audio/mpeg">
+    Trình duyệt của bạn không hỗ trợ phát nhạc.
+  </audio>
+
+  <!-- Nút bật nhạc -->
+  <button id="playMusic">🎵</button>
+
+  <script>
+    /* ======= PHẦN JAVASCRIPT ======= */
+
+    // Lấy phần tử
+    const canvas = document.getElementById('galaxy');
+    const ctx = canvas.getContext('2d');
+    const music = document.getElementById('bg-music');
+    const playBtn = document.getElementById('playMusic');
+    const title = document.getElementById('title');
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const stars = [];
+    const numStars = 300;
+    const mouse = { x: width / 2, y: height / 2 };
+
+    // Tạo sao
+    for (let i = 0; i < numStars; i++) {
+      stars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: Math.random() * 2,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        hue: Math.random() * 360,
+      });
+    }
+
+    let hueShift = 240;
+
+    // Vẽ nền + sao
+    function drawGalaxy() {
+      ctx.clearRect(0, 0, width, height);
+
+      const gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width);
+      gradient.addColorStop(0, `hsl(${(hueShift + 40) % 360}, 90%, 12%)`);
+      gradient.addColorStop(0.5, `hsl(${(hueShift + 80) % 360}, 80%, 8%)`);
+      gradient.addColorStop(1, "#020014");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      stars.forEach(star => {
+        const dx = mouse.x - star.x;
+        const dy = mouse.y - star.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          star.vx += dx / 5000;
+          star.vy += dy / 5000;
+        }
+        star.x += star.vx;
+        star.y += star.vy;
+        star.hue += 0.2;
+        if (star.x < 0) star.x = width;
+        if (star.x > width) star.x = 0;
+        if (star.y < 0) star.y = height;
+        if (star.y > height) star.y = 0;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `hsl(${star.hue}, 90%, 75%)`;
+        ctx.fill();
+      });
+
+      hueShift += 0.05;
+      requestAnimationFrame(drawGalaxy);
+    }
+
+    window.addEventListener('mousemove', e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    title.addEventListener('mouseenter', () => {
+      stars.forEach(star => {
+        const dx = width / 2 - star.x;
+        const dy = height / 2 - star.y;
+        star.vx += dx / 1000;
+        star.vy += dy / 1000;
+      });
+    });
+
+    title.addEventListener('mouseleave', () => {
+      stars.forEach(star => {
+        star.vx += (Math.random() - 0.5) * 1.2;
+        star.vy += (Math.random() - 0.5) * 1.2;
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
+
+    // Bật nhạc khi người dùng nhấn nút
+    playBtn.addEventListener('click', () => {
+      music.play();
+      playBtn.style.display = 'none';
+    });
+
+    drawGalaxy();
+  </script>
+</body>
+</html>
